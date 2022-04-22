@@ -11,32 +11,30 @@ def entry_get(entry):
 class Interfejs():
 
     def __init__(self):
-        self.root=Tk()
+        self.root = Tk()
         self.polozenie('Kalkulator kredytowy', '660x650+0+0', 'green')
 
-        self.napis(10 , 5 , 185, 30, 'Kwota kredytu:'                 )
-        self.napis(10 , 40, 185, 30, 'Oprocentowanie:'                )
-        self.napis(10 , 75, 185, 30, 'Okres kredytowania [lata]:'     )
+        self.napis(10, 5, 185, 30, 'Kwota kredytu:')
+        self.napis(10, 40, 185, 30, 'Oprocentowanie:')
+        self.napis(10, 75, 185, 30, 'Okres kredytowania [lata]:')
 
-        self.napis(395, 40, 185, 30, 'Rodzaj rat:'                    )
-        self.napis(395, 5 , 185, 30, 'Dodatkowe koszta:'              )
+        self.napis(395, 40, 185, 30, 'Rodzaj rat:')
+        self.napis(395, 5, 185, 30, 'Dodatkowe koszta:')
 
-        self.wzor =           self.wejscie(200, 5 , 70, 30, 300000 )
-        self.oprocentowanie = self.wejscie(200, 40, 70, 30, 0.025  )
-        self.dokladnosc =     self.wejscie(200, 75, 70, 30, 30     )
-        self.raty =           self.wejscie(585, 40, 70, 30, 'stałe')
-        self.koszta =         self.wejscie(585, 5 , 70, 30, 0      )
+        self.wzor = self.wejscie(200, 5, 70, 30, 300000)
+        self.oprocentowanie = self.wejscie(200, 40, 70, 30, 0.025)
+        self.dokladnosc = self.wejscie(200, 75, 70, 30, 30)
+        self.raty = self.wejscie(585, 40, 70, 30, 'stałe')
+        self.koszta = self.wejscie(585, 5, 70, 30, 0)
 
-        self.przycisk(283, 10 , 100, 40, 'Oblicz'         , partial(self.rysowanie))
-        self.przycisk(273, 605, 120, 40, 'Następny wykres', partial(self.next)     )
+        self.przycisk(283, 10, 100, 40, 'Oblicz', partial(self.rysowanie))
+        self.przycisk(273, 605, 120, 40, 'Następny wykres', partial(self.next))
 
         self.canvas = self.create_canvas()
-        self.liczba = 0
-        self.photos = []
         self.root.mainloop()
 
     def polozenie(self, nazwa, wymiary, kolor):
-        self.root.configure(background = kolor)
+        self.root.configure(background=kolor)
         self.root.geometry(wymiary)
         self.root.title(nazwa)
 
@@ -59,10 +57,17 @@ class Interfejs():
         return canvas
 
     def next(self):
-        self.liczba += 1
-        self.canvas.create_image(0, 0, image=self.photos[self.liczba%2], anchor=NW)
+        try:
+            self.liczba += 1
+            self.canvas.create_image(0, 0, image=self.photos[self.liczba % 2], anchor=NW)
+
+        except:
+            pass
 
     def rysowanie(self):
+        self.liczba = 0
+        self.photos = []
+
         Wykres(self)
 
 
@@ -72,34 +77,34 @@ class Wykres():
         self.fig, self.ax = plt.subplots()
         self.wykres = self.fig
 
-        interfejs.photos = []
-        interfejs.liczba = 0
-
-        okres = 12*int(entry_get(interfejs.dokladnosc))
+        okres = 12 * int(entry_get(interfejs.dokladnosc))
         kredyt = int(entry_get(interfejs.wzor))
         oprocentowanie = float(entry_get(interfejs.oprocentowanie))
         dodatek = float(entry_get(interfejs.koszta))
         raty = entry_get(interfejs.raty)
 
-        czas = np.linspace(0, okres/12, okres)
+        czas = np.linspace(0, okres / 12, okres)
 
         zadluzenie = int(entry_get(interfejs.wzor))
         suma = 0
 
         if raty == 'malejące':
-            czesc_kapitalowa = kredyt/okres
+            czesc_kapitalowa1 = (kredyt / okres)
 
-            kapitalowa = [czesc_kapitalowa for i in range(okres)]
+            kapitalowa = [czesc_kapitalowa1 for i in range(okres)]
             odsetkowa = []
             rata = []
             zadluzenia = [kredyt]
+
             for i in range(okres):
-                czesc_odsetkowa = zadluzenie*oprocentowanie/12
-                odsetkowa.append(czesc_odsetkowa)
-                suma += czesc_odsetkowa
-                rata.append(czesc_kapitalowa + czesc_odsetkowa)
-                zadluzenie -= czesc_kapitalowa
+                czesc_odsetkowa1 = zadluzenie * oprocentowanie / 12
+                odsetkowa.append(czesc_odsetkowa1)
+                rata.append(czesc_kapitalowa1 + czesc_odsetkowa1)
+
+                zadluzenie -= czesc_kapitalowa1
                 zadluzenia.append(zadluzenie)
+
+                suma += czesc_odsetkowa1
 
         if raty == 'stałe':
             kapitalowa = []
@@ -108,67 +113,71 @@ class Wykres():
 
             sumka = 0
             for i in range(1, okres + 1):
-                sumka += (1 + oprocentowanie/12)**(-i)
-            rat = kredyt/sumka
+                sumka += (1 + (oprocentowanie / 12))**(-i)
 
+            rat = (kredyt / sumka)
             rata = [rat for i in range(okres)]
+
             for i in range(okres):
-                czesc_odsetkowa = zadluzenie*oprocentowanie/12
-                odsetkowa.append(czesc_odsetkowa)
-                suma += czesc_odsetkowa
-                kapitalowa.append(rat - czesc_odsetkowa)
-                zadluzenie -= rat - czesc_odsetkowa
+                czesc_odsetkowa1 = zadluzenie * oprocentowanie / 12
+                odsetkowa.append(czesc_odsetkowa1)
+                kapitalowa.append(rat - czesc_odsetkowa1)
+
+                zadluzenie -= rat - czesc_odsetkowa1
                 zadluzenia.append(zadluzenie)
 
+                suma += czesc_odsetkowa1
+
         if raty == 'stałe':
-            plt.plot(list(czas) + [(okres + 1)/12], zadluzenia, label='Raty:{}'.format(round(rat, 2)))
+            plt.plot(list(czas) + [(okres + 1) / 12], zadluzenia, label='Raty:{}'.format(round(rat, 2)))
         else:
-            plt.plot(list(czas) + [(okres + 1)/12], zadluzenia, label='Pierwsza rata:{}, Ostatnia rata:{}'.format(round(rata[0], 2), round(rata[-1], 2)))
+            plt.plot(list(czas) + [(okres + 1) / 12], zadluzenia, label='Pierwsza rata:{}, Ostatnia rata:{}'.format(round(rata[0], 2), round(rata[-1], 2)))
 
         plt.title('Odsetki:{}zł  ;  Do spłaty:{}zł'.format(round(suma, 2), round(kredyt + suma + dodatek, 2)))
         plt.ylabel('Zadłużenie [zł]', fontsize=15)
         plt.xlabel('Lata', fontsize=15)
-        plt.ylim([0, kredyt*1.01])
-        plt.xlim([0, (okres + 1)//12])
+        plt.ylim([0, (kredyt * 1.01)])
+        plt.xlim([0, (okres + 1) // 12])
         plt.tight_layout()
         plt.legend()
         plt.grid()
 
-        self.zapis_canvas('wykres1.png')
-        interfejs.photos.append(PhotoImage(file='wykres1.png'))
+        self.zapis_canvas(interfejs, 'wykres1.png')
+        
         plt.clf()
 
-        KAPITALOWA = []
-        ODSETKOWA = []
+        czesc_kapitalowa = []
+        czesc_odsetkowa = []
 
         suma_k, suma_o = 0, 0
         for i in range(okres):
             suma_k += kapitalowa[i]
             suma_o += odsetkowa[i]
 
-            if i%12 == 11:
-                KAPITALOWA.append(suma_k)
-                ODSETKOWA.append(suma_o)
+            if (i % 12) == 11:
+                czesc_kapitalowa.append(suma_k)
+                czesc_odsetkowa.append(suma_o)
                 suma_k, suma_o = 0, 0
 
-        KAPITALOWA = np.array(KAPITALOWA, dtype=float)
-        ODSETKOWA = np.array(ODSETKOWA, dtype=float)
-        plt.bar(range(1, (okres//12) + 1), KAPITALOWA, label='Część kapitałowa')
-        plt.bar(range(1, (okres//12) + 1), ODSETKOWA, bottom=KAPITALOWA, label='Część odsetkowa')
+        czesc_kapitalowa = np.array(czesc_kapitalowa, dtype=float)
+        czesc_odsetkowa = np.array(czesc_odsetkowa, dtype=float)
+
+        plt.bar(range(1, (okres // 12) + 1), czesc_kapitalowa, label='Część kapitałowa')
+        plt.bar(range(1, (okres // 12) + 1), czesc_odsetkowa, bottom=czesc_kapitalowa, label='Część odsetkowa')
         plt.title('Odsetki:{}zł  ;  Do spłaty:{}zł'.format(round(suma, 2), round(kredyt + suma + dodatek, 2)))
         plt.ylabel('Suma rocznych rat [zł]', fontsize=15)
         plt.xlabel('Rok', fontsize=15)
-        plt.xticks(range(1, okres//12 + 1, 2))
+        plt.xticks(range(1, (okres // 12) + 1, 2))
         plt.legend(loc='lower right')
 
-        self.zapis_canvas('wykres2.png')
-        interfejs.photos.append(PhotoImage(file='wykres2.png'))
+        self.zapis_canvas(interfejs, 'wykres2.png')
 
-        interfejs.canvas.create_image(0, 0, image=interfejs.photos[interfejs.liczba%2], anchor=NW)
+        interfejs.canvas.create_image(0, 0, image=interfejs.photos[interfejs.liczba % 2], anchor=NW)
         interfejs.root.mainloop()
 
-    def zapis_canvas(self, nazwa):
+    def zapis_canvas(self, interfejs, nazwa):
         self.wykres.savefig(nazwa)
+        interfejs.photos.append(PhotoImage(file=nazwa))
 
 
 if __name__=='__main__':
